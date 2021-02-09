@@ -1,0 +1,27 @@
+{
+  "name": "fcm-push-sender-test",
+  "version": "1.0.0",
+  "description": "FCM push sender for test firebase cloud messaging on the mobile app.",
+  "main": "fcm.js",
+  "dependencies": {
+    "fcm-node": "^1.5.2",
+    "prompt": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node fcm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koonmolo/fcm-push-sender-test.git"
+  },
+  "keywords": [
+    "fcmtest"
+  ],
+  "author": "Thanapol Pilawal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/koonmolo/fcm-push-sender-test/issues"
+  },
+  "homepage": "https://github.com/koonmolo/fcm-push-sender-test#readme"
+}
