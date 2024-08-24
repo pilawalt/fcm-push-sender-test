@@ -4,10 +4,10 @@
   "description": "FCM push sender for test firebase cloud messaging on the mobile app.",
   "main": "fcm.js",
   "dependencies": {
-    "fcm-node": "^1.5.2",
+    "axios": "^1.7.5",
+    "googleapis": "^142.0.0",
     "prompt": "^1.1.0"
   },
-  "devDependencies": {},
   "scripts": {
     "start": "node fcm"
   },
