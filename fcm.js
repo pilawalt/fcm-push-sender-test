@@ -65,9 +65,9 @@ let projectId = '';  // Store the project ID here
     ]);
 
     if (templateResponse.Confirm === 'Yes') {
-      await sendMessageTemplate(regisID);
+      await handleSendMessageLoop(sendMessageTemplate, regisID);
     } else {
-      await sendMessage(regisID);
+      await handleSendMessageLoop(sendMessage, regisID);
     }
   } catch (err) {
     onErr(err.message);
@@ -89,152 +89,129 @@ async function getAccessToken(serviceAccountPath) {
 }
 
 async function sendMessageTemplate(registrationToken) {
-  try {
-    const accessToken = await getAccessToken(serviceAccountPath);
+  const accessToken = await getAccessToken(serviceAccountPath);
 
-    const message = {
-      message: {
-        token: registrationToken,
-        notification: {
-          title: 'Notification Title',
-          body: 'This is the body of the FCM notification.',
-        },
-        data: {
-          title: 'Custom Data Title',
-          body: 'This is the body of the custom data.',
-          screen: 'HomeScreen', // Example of passing custom data for navigation
-        },
+  const message = {
+    message: {
+      token: registrationToken,
+      notification: {
+        title: 'Notification Title',
+        body: 'This is the body of the FCM notification.',
       },
-    };
-
-    console.log('Ready for delivery!');
-    console.log('##### Message Details #####');
-    console.log(`To: ${message.message.token}`);
-    console.log(`Title: ${message.message.notification.title}`);
-    console.log(`Body: ${message.message.notification.body}`);
-    console.log('Data:');
-    console.log(message.message.data);
-    console.log('########################');
-
-    const sendConfirmation = await prompt([
-      {
-        type: 'list',
-        name: 'Confirm',
-        message: 'Are you sure you want to send the message?',
-        choices: ['Yes', 'No'],
+      data: {
+        title: 'Custom Data Title',
+        body: 'This is the body of the custom data.',
+        screen: 'HomeScreen', // Example of passing custom data for navigation
       },
-    ]);
+    },
+  };
 
-    if (sendConfirmation.Confirm === 'Yes') {
-      try {
-        const response = await axios.post(
-          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-          message,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 10000,  // Set the timeout to 10 seconds (10000 milliseconds)
-          }
-        );
-        console.log('Message successfully sent. Response:', response.data);
-      } catch (error) {
-        if (error.response) {
-          console.log('Something has gone wrong!', error.response.data);
-        } else {
-          console.log('Request failed:', error.message);
-        }
-      }
-    } else {
-      console.log('Message sending has been canceled.');
-    }
-  } catch (err) {
-    onErr(err.message);
-  }
+  await sendMessageToFCM(message, accessToken);
 }
 
 async function sendMessage(registrationToken) {
-  try {
-    const accessToken = await getAccessToken(serviceAccountPath);
+  const accessToken = await getAccessToken(serviceAccountPath);
 
-    const messageDetails = await prompt([
-      {
-        type: 'input',
-        name: 'Title',
-        message: 'Title:',
-      },
-      {
-        type: 'input',
-        name: 'Message',
-        message: 'Message:',
-      },
-      {
-        type: 'input',
-        name: 'Count',
-        message: 'Count:',
-      },
-    ]);
+  const messageDetails = await prompt([
+    {
+      type: 'input',
+      name: 'Title',
+      message: 'Title:',
+    },
+    {
+      type: 'input',
+      name: 'Message',
+      message: 'Message:',
+    },
+    {
+      type: 'input',
+      name: 'Count',
+      message: 'Count:',
+    },
+  ]);
 
-    const message = {
-      message: {
-        token: registrationToken,
-        notification: {
-          title: messageDetails.Title,
-          body: messageDetails.Message,
-        },
-        data: {
-          title: messageDetails.Title,
-          body: messageDetails.Message,
-          msgcnt: messageDetails.Count,
-        },
+  const message = {
+    message: {
+      token: registrationToken,
+      notification: {
+        title: messageDetails.Title,
+        body: messageDetails.Message,
       },
-    };
+      data: {
+        title: messageDetails.Title,
+        body: messageDetails.Message,
+        msgcnt: messageDetails.Count,
+      },
+    },
+  };
 
-    console.log('Ready for delivery!');
-    console.log('##### Message Details #####');
-    console.log(`To: ${message.message.token}`);
-    console.log(`Title: ${message.message.notification.title}`);
-    console.log(`Body: ${message.message.notification.body}`);
-    console.log('Data:');
-    console.log(message.message.data);
-    console.log('########################');
+  await sendMessageToFCM(message, accessToken);
+}
 
-    const sendConfirmation = await prompt([
+async function sendMessageToFCM(message, accessToken) {
+  console.log('Ready for delivery!');
+  console.log('##### Message Details #####');
+  console.log(`To: ${message.message.token}`);
+  console.log(`Title: ${message.message.notification.title}`);
+  console.log(`Body: ${message.message.notification.body}`);
+  console.log('Data:');
+  console.log(message.message.data);
+  console.log('########################');
+
+  const sendConfirmation = await prompt([
+    {
+      type: 'list',
+      name: 'Confirm',
+      message: 'Are you sure you want to send the message?',
+      choices: ['Yes', 'No'],
+    },
+  ]);
+
+  if (sendConfirmation.Confirm === 'Yes') {
+    try {
+      const response = await axios.post(
+        `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+        message,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,  // Set the timeout to 10 seconds (10000 milliseconds)
+        }
+      );
+      console.log('Message successfully sent. Response:', response.data);
+    } catch (error) {
+      if (error.response) {
+        console.log('Something has gone wrong!', error.response.data);
+      } else {
+        console.log('Request failed:', error.message);
+      }
+    }
+  } else {
+    console.log('Message sending has been canceled.');
+  }
+}
+
+async function handleSendMessageLoop(sendFunction, regisID) {
+  let continueSending = true;
+
+  while (continueSending) {
+    await sendFunction(regisID);
+
+    const continueResponse = await prompt([
       {
         type: 'list',
-        name: 'Confirm',
-        message: 'Are you sure to send?',
+        name: 'Continue',
+        message: 'Do you want to send another message with the same data?',
         choices: ['Yes', 'No'],
       },
     ]);
 
-    if (sendConfirmation.Confirm === 'Yes') {
-      try {
-        const response = await axios.post(
-          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-          message,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        console.log('Successfully sent with response:', response.data);
-      } catch (error) {
-        if (error.response) {
-          console.log('Something has gone wrong!', error.response.data);
-        } else {
-          console.log('Request failed:', error.message);
-        }
-      }
-    } else {
-      console.log('Message sending has been canceled.');
-    }
-  } catch (err) {
-    onErr(err.message);
+    continueSending = continueResponse.Continue === 'Yes';
   }
+
+  console.log('Message sending process completed.');
 }
 
 function onErr(err) {
