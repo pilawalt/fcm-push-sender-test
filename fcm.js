@@ -9,8 +9,10 @@ console.log('--------------------------');
 prompt.start();
 
 const fcmKeyObj = [
+  // Add more apps to this array as needed
   {
-    app: 'POH4', key: './paradeofhomes4.json',
+    app: 'Your App Name', 
+    key: 'Path to Firebase Admin SDK Private Key File',
   },
 ];
 
