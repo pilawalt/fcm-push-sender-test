@@ -3,9 +3,9 @@ const prompt = inquirer.createPromptModule();
 const { google } = require('googleapis');
 const axios = require('axios');
 
-console.log('--------------------------');
-console.log('Welcome To Push Test FCM');
-console.log('--------------------------');
+console.log('**************************');
+console.log('  Starting FCM Push Test  ');
+console.log('**************************');
 
 const fcmKeyObj = [
   // Add more apps to this array as needed
@@ -43,8 +43,8 @@ let projectId = '';  // Store the project ID here
 
     if (!found) {
       serviceAccountPath = fcmKeyObj[0].key;
-      console.log('Wrong project name, set to default');
-      console.log(`Service Account Path is ${serviceAccountPath}`);
+      console.log('Invalid project name, default settings applied.');
+      console.log(`Service Account Path set to: ${serviceAccountPath}`);
     }
 
     const key = require(serviceAccountPath);
@@ -54,22 +54,22 @@ let projectId = '';  // Store the project ID here
       {
         type: 'input',
         name: 'RegisID',
-        message: 'Please input registration id android:',
+        message: 'Please enter the Android registration ID:',
       },
     ]);
 
     regisID = regisIDResponse.RegisID;
 
     if (!regisID) {
-      console.log('RegisID: blank');
-      return onErr('No RegisID');
+      console.log('Registration ID is empty.');
+      return onErr('No Registration ID provided.');
     }
 
     const templateResponse = await prompt([
       {
         type: 'list',
         name: 'Confirm',
-        message: 'Use FCM payload template?',
+        message: 'Would you like to use the FCM payload template?',
         choices: ['Yes', 'No'],
       },
     ]);
@@ -106,19 +106,19 @@ async function sendMessageTemplate(registrationToken) {
       message: {
         token: registrationToken,
         notification: {
-          title: 'Title of FCM push notification',
-          body: 'Body of FCM push notification',
+          title: 'Notification Title',
+          body: 'This is the body of the FCM notification.',
         },
         data: {
-          title: 'Title of FCM push notification',
-          body: 'Body of FCM push notification',
-          screen: 'Home', // example when pass custom data        
+          title: 'Custom Data Title',
+          body: 'This is the body of the custom data.',
+          screen: 'HomeScreen', // Example of passing custom data for navigation
         },
       },
     };
 
-    console.log('Ready to send!');
-    console.log('#####Payload detail#####');
+    console.log('Ready for delivery!');
+    console.log('##### Message Details #####');
     console.log(`To: ${message.message.token}`);
     console.log(`Title: ${message.message.notification.title}`);
     console.log(`Body: ${message.message.notification.body}`);
@@ -130,7 +130,7 @@ async function sendMessageTemplate(registrationToken) {
       {
         type: 'list',
         name: 'Confirm',
-        message: 'Are you sure to send?',
+        message: 'Are you sure you want to send the message?',
         choices: ['Yes', 'No'],
       },
     ]);
@@ -148,7 +148,7 @@ async function sendMessageTemplate(registrationToken) {
             timeout: 10000,  // Set the timeout to 10 seconds (10000 milliseconds)
           }
         );
-        console.log('Successfully sent with response:', response.data);
+        console.log('Message successfully sent. Response:', response.data);
       } catch (error) {
         if (error.response) {
           console.log('Something has gone wrong!', error.response.data);
@@ -157,7 +157,7 @@ async function sendMessageTemplate(registrationToken) {
         }
       }
     } else {
-      console.log('Message will not be sent ^^');
+      console.log('Message sending has been canceled.');
     }
   } catch (err) {
     onErr(err.message);
@@ -201,8 +201,8 @@ async function sendMessage(registrationToken) {
       },
     };
 
-    console.log('Ready to send!');
-    console.log('#####Payload detail#####');
+    console.log('Ready for delivery!');
+    console.log('##### Message Details #####');
     console.log(`To: ${message.message.token}`);
     console.log(`Title: ${message.message.notification.title}`);
     console.log(`Body: ${message.message.notification.body}`);
@@ -240,7 +240,7 @@ async function sendMessage(registrationToken) {
         }
       }
     } else {
-      console.log('Message will not be sent ^^');
+      console.log('Message sending has been canceled.');
     }
   } catch (err) {
     onErr(err.message);
