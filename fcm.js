@@ -1,12 +1,11 @@
-const prompt = require('prompt');
+const inquirer = require('inquirer');
+const prompt = inquirer.createPromptModule();
 const { google } = require('googleapis');
 const axios = require('axios');
 
 console.log('--------------------------');
 console.log('Welcome To Push Test FCM');
 console.log('--------------------------');
-
-prompt.start();
 
 const fcmKeyObj = [
   // Add more apps to this array as needed
@@ -20,45 +19,70 @@ let serviceAccountPath = '';
 let regisID = '';
 let projectId = '';  // Store the project ID here
 
-console.log('Please input your project name?');
-prompt.get(['ProjectName'], async function (err, project) {
-  if (err) { return onErr(err); }
-  console.log('Project: ' + project.ProjectName);
+(async function () {
+  try {
+    const project = await prompt([
+      {
+        type: 'input',
+        name: 'ProjectName',
+        message: 'Please input your project name:',
+      },
+    ]);
 
-  for (i = 0; i < fcmKeyObj.length; i++) {
-    if (fcmKeyObj[i].app === project.ProjectName) {
-      serviceAccountPath = fcmKeyObj[i].key;
-      console.log(`Service Account Path is ${serviceAccountPath}`);
-    } else {
+    console.log('Project: ' + project.ProjectName);
+
+    let found = false;
+    for (let i = 0; i < fcmKeyObj.length; i++) {
+      if (fcmKeyObj[i].app === project.ProjectName) {
+        serviceAccountPath = fcmKeyObj[i].key;
+        console.log(`Service Account Path is ${serviceAccountPath}`);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
       serviceAccountPath = fcmKeyObj[0].key;
-      console.log('Wrong project name set to default');
+      console.log('Wrong project name, set to default');
       console.log(`Service Account Path is ${serviceAccountPath}`);
     }
-  }
 
-  const key = require(serviceAccountPath);
-  projectId = key.project_id;
+    const key = require(serviceAccountPath);
+    projectId = key.project_id;
 
-  console.log('Please input registration id android?');
-  prompt.get(['RegisID'], async function (err, data) {
-    if (err) { return onErr('No RegisID'); }
-    regisID = data.RegisID;
+    const regisIDResponse = await prompt([
+      {
+        type: 'input',
+        name: 'RegisID',
+        message: 'Please input registration id android:',
+      },
+    ]);
 
-    if (regisID === '') {
-      console.log('RegisID: ' + 'blank');
-      onErr('No RegisID');
-    } else {
-      console.log('Use FCM payload template? "type -y for confirm"');
-      prompt.get(['Confirm'], async function (err, template) {
-        if (template.Confirm == '-y') {
-          await sendMessageTemplate(regisID);
-        } else {
-          await sendMessage(regisID);
-        }
-      });
+    regisID = regisIDResponse.RegisID;
+
+    if (!regisID) {
+      console.log('RegisID: blank');
+      return onErr('No RegisID');
     }
-  });
-});
+
+    const templateResponse = await prompt([
+      {
+        type: 'list',
+        name: 'Confirm',
+        message: 'Use FCM payload template?',
+        choices: ['Yes', 'No'],
+      },
+    ]);
+
+    if (templateResponse.Confirm === 'Yes') {
+      await sendMessageTemplate(regisID);
+    } else {
+      await sendMessage(regisID);
+    }
+  } catch (err) {
+    onErr(err.message);
+  }
+})();
 
 async function getAccessToken(serviceAccountPath) {
   const key = require(serviceAccountPath);
@@ -75,36 +99,127 @@ async function getAccessToken(serviceAccountPath) {
 }
 
 async function sendMessageTemplate(registrationToken) {
-  const accessToken = await getAccessToken(serviceAccountPath);
+  try {
+    const accessToken = await getAccessToken(serviceAccountPath);
 
-  const message = {
-    message: {
-      token: registrationToken,
-      notification: {
-        title: 'Title of FCM push notification',
-        body: 'Body of FCM push notification',
+    const message = {
+      message: {
+        token: registrationToken,
+        notification: {
+          title: 'Title of FCM push notification',
+          body: 'Body of FCM push notification',
+        },
+        data: {
+          title: 'Title of FCM push notification',
+          body: 'Body of FCM push notification',
+          screen: 'Home', // example when pass custom data        
+        },
       },
-      data: {
-        title: 'Title of FCM push notification',
-        body: 'Body of FCM push notification',
-        userInfo: JSON.stringify({ id: 1, type: 'session' }),
+    };
+
+    console.log('Ready to send!');
+    console.log('#####Payload detail#####');
+    console.log(`To: ${message.message.token}`);
+    console.log(`Title: ${message.message.notification.title}`);
+    console.log(`Body: ${message.message.notification.body}`);
+    console.log('Data:');
+    console.log(message.message.data);
+    console.log('########################');
+
+    const sendConfirmation = await prompt([
+      {
+        type: 'list',
+        name: 'Confirm',
+        message: 'Are you sure to send?',
+        choices: ['Yes', 'No'],
       },
-    },
-  };
+    ]);
 
-  console.log('Ready to send!');
-  console.log('#####Payload detail#####');
-  console.log(`To: ${message.message.token}`);
-  console.log(`Title: ${message.message.notification.title}`);
-  console.log(`Body: ${message.message.notification.body}`);
-  console.log('Data:');
-  console.log(message.message.data);
-  console.log('########################');
-  console.log('Are you sure to send? "type -y for confirm"');
+    if (sendConfirmation.Confirm === 'Yes') {
+      try {
+        const response = await axios.post(
+          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+          message,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,  // Set the timeout to 10 seconds (10000 milliseconds)
+          }
+        );
+        console.log('Successfully sent with response:', response.data);
+      } catch (error) {
+        if (error.response) {
+          console.log('Something has gone wrong!', error.response.data);
+        } else {
+          console.log('Request failed:', error.message);
+        }
+      }
+    } else {
+      console.log('Message will not be sent ^^');
+    }
+  } catch (err) {
+    onErr(err.message);
+  }
+}
 
-  prompt.get(['Input'], async function (err, result) {
-    if (err) { return onErr('Message not sent'); }
-    if (result.Input === '-y') {
+async function sendMessage(registrationToken) {
+  try {
+    const accessToken = await getAccessToken(serviceAccountPath);
+
+    const messageDetails = await prompt([
+      {
+        type: 'input',
+        name: 'Title',
+        message: 'Title:',
+      },
+      {
+        type: 'input',
+        name: 'Message',
+        message: 'Message:',
+      },
+      {
+        type: 'input',
+        name: 'Count',
+        message: 'Count:',
+      },
+    ]);
+
+    const message = {
+      message: {
+        token: registrationToken,
+        notification: {
+          title: messageDetails.Title,
+          body: messageDetails.Message,
+        },
+        data: {
+          title: messageDetails.Title,
+          body: messageDetails.Message,
+          msgcnt: messageDetails.Count,
+        },
+      },
+    };
+
+    console.log('Ready to send!');
+    console.log('#####Payload detail#####');
+    console.log(`To: ${message.message.token}`);
+    console.log(`Title: ${message.message.notification.title}`);
+    console.log(`Body: ${message.message.notification.body}`);
+    console.log('Data:');
+    console.log(message.message.data);
+    console.log('########################');
+
+    const sendConfirmation = await prompt([
+      {
+        type: 'list',
+        name: 'Confirm',
+        message: 'Are you sure to send?',
+        choices: ['Yes', 'No'],
+      },
+    ]);
+
+    if (sendConfirmation.Confirm === 'Yes') {
       try {
         const response = await axios.post(
           `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
@@ -118,71 +233,21 @@ async function sendMessageTemplate(registrationToken) {
         );
         console.log('Successfully sent with response:', response.data);
       } catch (error) {
-        console.log('Something has gone wrong!', error);
+        if (error.response) {
+          console.log('Something has gone wrong!', error.response.data);
+        } else {
+          console.log('Request failed:', error.message);
+        }
       }
     } else {
-      onErr('Message will not be sent ^^');
+      console.log('Message will not be sent ^^');
     }
-  });
-}
-
-async function sendMessage(registrationToken) {
-  const accessToken = await getAccessToken(serviceAccountPath);
-
-  prompt.get(['Title', 'Message', 'Count'], async function (err, messange) {
-    if (err) { return onErr('No Descriptions'); }
-
-    const message = {
-      message: {
-        token: registrationToken,
-        notification: {
-          title: messange.Title,
-          body: messange.Message,
-        },
-        data: {
-          title: messange.Title,
-          body: messange.Message,
-          msgcnt: messange.Count,
-        },
-      },
-    };
-
-    console.log('Ready to send!');
-    console.log('#####Payload detail#####');
-    console.log(`To: ${message.message.token}`);
-    console.log(`Title: ${message.message.notification.title}`);
-    console.log(`Body: ${message.message.notification.body}`);
-    console.log('Data:');
-    console.log(message.message.data);
-    console.log('########################');
-    console.log('Are you sure to send? "type -y for confirm"');
-
-    prompt.get(['Input'], async function (err, result) {
-      if (err) { return onErr('Message not sent'); }
-      if (result.Input === '-y') {
-        try {
-          const response = await axios.post(
-            `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,  // Use the projectId here
-            message,
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-          console.log('Successfully sent with response:', response.data);
-        } catch (error) {
-            console.log('Something has gone wrong!', error.response.data); // Add this line
-        }
-      } else {
-        onErr('Message will not be sent ^^');
-      }
-    });
-  });
+  } catch (err) {
+    onErr(err.message);
+  }
 }
 
 function onErr(err) {
-  console.log(err);
+  console.log('Error:', err);
   return 1;
 }
