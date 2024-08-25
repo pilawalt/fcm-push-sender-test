@@ -21,31 +21,21 @@ let projectId = '';  // Store the project ID here
 
 (async function () {
   try {
+    // Prompt the user to select the project name from the available options
     const project = await prompt([
       {
-        type: 'input',
+        type: 'list',
         name: 'ProjectName',
-        message: 'Please input your project name:',
+        message: 'Please select your project:',
+        choices: fcmKeyObj.map((app) => app.app), // Display the available apps as choices
       },
     ]);
 
-    console.log('Project: ' + project.ProjectName);
+    console.log('Selected Project: ' + project.ProjectName);
 
-    let found = false;
-    for (let i = 0; i < fcmKeyObj.length; i++) {
-      if (fcmKeyObj[i].app === project.ProjectName) {
-        serviceAccountPath = fcmKeyObj[i].key;
-        console.log(`Service Account Path is ${serviceAccountPath}`);
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      serviceAccountPath = fcmKeyObj[0].key;
-      console.log('Invalid project name, default settings applied.');
-      console.log(`Service Account Path set to: ${serviceAccountPath}`);
-    }
+    const selectedProject = fcmKeyObj.find((app) => app.app === project.ProjectName);
+    serviceAccountPath = selectedProject.key;
+    console.log(`Service Account Path set to: ${serviceAccountPath}`);
 
     const key = require(serviceAccountPath);
     projectId = key.project_id;
