@@ -1,40 +1,41 @@
 const inquirer = require('inquirer');
 const prompt = inquirer.createPromptModule();
+const fs = require('fs');
 const { google } = require('googleapis');
 const axios = require('axios');
+const path = require('path');
 
 console.log('**************************');
 console.log('  Starting FCM Push Test  ');
 console.log('**************************');
 
-const fcmKeyObj = [
-  // Add more apps to this array as needed
-  {
-    app: 'Your App Name', 
-    key: 'Path to Firebase Admin SDK Private Key File',
-  },
-];
+const keysDirectory = './Keys/';
 
 let serviceAccountPath = '';
 let regisID = '';
-let projectId = '';  // Store the project ID here
+let projectId = '';
 
 (async function () {
   try {
-    // Prompt the user to select the project name from the available options
+    const availableKeys = fs.readdirSync(keysDirectory)
+      .filter(file => file.endsWith('.json'))
+      .map(file => path.join(keysDirectory, file));
+    if (availableKeys.length === 0) {
+      console.log('No service account JSON files found in the directory.');
+      return;
+    }
+
+    // Prompt the user to select the project key file from the available options
     const project = await prompt([
       {
         type: 'list',
-        name: 'ProjectName',
-        message: 'Please select your project:',
-        choices: fcmKeyObj.map((app) => app.app), // Display the available apps as choices
+        name: 'ProjectKey',
+        message: 'Please select your service account key file:',
+        choices: availableKeys,
       },
     ]);
 
-    console.log('Selected Project: ' + project.ProjectName);
-
-    const selectedProject = fcmKeyObj.find((app) => app.app === project.ProjectName);
-    serviceAccountPath = selectedProject.key;
+    serviceAccountPath = project.ProjectKey;
     console.log(`Service Account Path set to: ${serviceAccountPath}`);
 
     const key = require(serviceAccountPath);
