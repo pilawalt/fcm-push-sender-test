@@ -40,6 +40,7 @@ npm install
 To start the FCM push sender, run:
 ```sh
  npm start
+```
 
 ## References
 
