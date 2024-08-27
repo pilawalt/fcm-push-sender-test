@@ -19,7 +19,7 @@ let projectId = '';
   try {
     const availableKeys = fs.readdirSync(keysDirectory)
       .filter(file => file.endsWith('.json'))
-      .map(file => path.join(keysDirectory, file));
+      .map(file => path.join(keysDirectory, file)); 
     if (availableKeys.length === 0) {
       console.log('No service account JSON files found in the directory.');
       return;
@@ -36,10 +36,10 @@ let projectId = '';
     ]);
 
     serviceAccountPath = project.ProjectKey;
-    console.log(`Service Account Path set to: ${serviceAccountPath}`);
+    console.log(`Service Account Path set to: ./${serviceAccountPath}`);
 
-    const key = require(serviceAccountPath);
-    projectId = key.project_id;
+    const key = require(`./${serviceAccountPath}`); 
+    projectId = key.project_id; 
 
     const regisIDResponse = await prompt([
       {
