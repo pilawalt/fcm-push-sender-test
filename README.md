@@ -35,8 +35,6 @@ npm install
 
 1. Copy your Firebase Admin SDK private key file to "Keys" folder.
    
-2. Update the code to link to the private key file. Example:
-
 To start the FCM push sender, run:
 ```sh
  npm start
