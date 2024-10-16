@@ -90,7 +90,7 @@ async function getAccessToken(serviceAccountPath) {
 }
 
 async function sendMessageTemplate(registrationToken) {
-  const accessToken = await getAccessToken(serviceAccountPath);
+  const accessToken = await getAccessToken(`./${serviceAccountPath}`);
 
   const message = {
     message: {
@@ -111,7 +111,7 @@ async function sendMessageTemplate(registrationToken) {
 }
 
 async function sendMessage(registrationToken) {
-  const accessToken = await getAccessToken(serviceAccountPath);
+  const accessToken = await getAccessToken(`./${serviceAccountPath}`);
 
   const messageDetails = await prompt([
     {
