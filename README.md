@@ -11,6 +11,7 @@ A tool for testing Firebase Cloud Messaging (FCM) on mobile apps. It helps send 
 
 ## Features
 - Send FCM push notifications to test mobile apps.
+- Enable sending messages to a specific topic
 - Simple setup with minimal dependencies.
 - Easy-to-use command-line interface.
 
