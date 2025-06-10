@@ -56,6 +56,29 @@ let projectId = '';
       return onErr('No Registration ID provided.');
     }
 
+    const targetTypeResponse = await prompt([
+      {
+        type: 'list',
+        name: 'TargetType',
+        message: 'Send message to:',
+        choices: ['Token', 'Topic'],
+      },
+    ]);
+
+    let target = '';
+    if (targetTypeResponse.TargetType === 'Token') {
+      target = regisID;
+    } else {
+      const topicResponse = await prompt([
+        {
+          type: 'input',
+          name: 'Topic',
+          message: 'Enter the topic name:',
+        },
+      ]);
+      target = `/topics/${topicResponse.Topic}`;
+    }
+
     const templateResponse = await prompt([
       {
         type: 'list',
@@ -66,9 +89,9 @@ let projectId = '';
     ]);
 
     if (templateResponse.Confirm === 'Yes') {
-      await handleSendMessageLoop(sendMessageTemplate, regisID);
+      await handleSendMessageLoop(sendMessageTemplate, target);
     } else {
-      await handleSendMessageLoop(sendMessage, regisID);
+      await handleSendMessageLoop(sendMessage, target);
     }
   } catch (err) {
     onErr(err.message);
@@ -102,7 +125,7 @@ async function sendMessageTemplate(registrationToken) {
       data: {
         title: 'Custom Data Title',
         body: 'This is the body of the custom data.',
-        screen: 'HomeScreen', // Example of passing custom data for navigation
+        link: 'pushnotificationcenter://associationmember/4322', // Example of passing custom data for navigation
       },
     },
   };
