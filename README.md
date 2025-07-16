@@ -19,7 +19,7 @@ A tool for testing Firebase Cloud Messaging (FCM) on mobile apps. It helps send 
 
 Clone the repository:
 ```sh
-git clone https://github.com/koonmolo/fcm-push-sender-test.git
+git clone https://github.com/pilawalt/fcm-push-sender-test.git
 ```
 
 Navigate to the project directory:
