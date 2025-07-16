@@ -41,6 +41,18 @@ npm install
  npm start
 ```
 
+### How the Tool Uses Prompts
+
+When you run the tool, it will ask you questions (prompts) in your terminal. You will be guided step by step to:
+- Choose your Firebase service account key file.
+- Enter the registration ID or topic for the device or group you want to send a message to.
+- Decide if you want to use a message template or create your own message.
+- Fill in the message details (like title, body, and count) if you choose to create your own.
+- Confirm before sending each message.
+- Choose if you want to send another message with the same data.
+
+Just follow the instructions on the screen and type your answers. This makes it easy to test sending push notifications, even if you are not an expert.
+
 ## References
 
 - **Creating a Sender Token:**  
